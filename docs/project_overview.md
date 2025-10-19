@@ -2,7 +2,7 @@
 
 ---
 
-## 🌍 English Version
+🌍 English Version
 
 ### Project Name
 **Synapta OS**  
