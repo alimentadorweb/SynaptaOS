@@ -62,6 +62,20 @@ This clause and all related matters are governed by international open-source co
 Disputes or claims shall be resolved under the jurisdiction designated by the **Synapta OS Initiative**, currently based in **El Salvador**, with the option to expand under international agreements.
 
 ---
+---
+
+## 8. Acknowledgment of Initial Support / Reconocimiento de Apoyo Inicial
+
+The **Synapta OS Initiative** expresses its deep gratitude to **GetOverX.com** for providing the **initial seed capital** that made possible the early development and testing of Synapta OS.  
+This contribution was made **without any financial return, ownership claim, or commercial expectation**, and is recognized **solely as a gesture of support** toward the educational and humanitarian mission of the project.
+
+---
+
+La **Iniciativa Synapta OS** expresa su profundo agradecimiento a **GetOverX.com** por haber proporcionado el **capital semilla inicial** que permitió el desarrollo y las primeras pruebas de Synapta OS.  
+Esta contribución se realizó **sin ninguna retribución económica, participación accionaria ni expectativa comercial**, y se reconoce **únicamente como un gesto de apoyo** a la misión educativa y humanitaria del proyecto.
+
+---
+
 
 **In summary:**  
 No person or organization may request, manage, or represent funding for Synapta OS or its derivatives outside of official Synapta OS authorization.  
