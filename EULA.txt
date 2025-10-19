@@ -6,4 +6,5 @@ No individual, organization, or third party is authorized to solicit, receive, o
 Any fundraising, partnership, or institutional collaboration related to Synapta OS must be conducted exclusively through the official Synapta OS channels.
 Unauthorized fundraising, representation, or derivative projects using the Synapta OS name, logo, or concept for financial or institutional gain is strictly prohibited.
 
-Would you like me to integrate this clause directly into the EULA.txt you requested earlier (so it becomes legally consistent), or prefer it as a separate section like docs/legal/funding_rights.md for transparency to sponsors and institutions?
+Would you like me to integrate this clause directly into the EULA.txt you requested earlier (so it becomes legally consistent), 
+or prefer it as a separate section like docs/legal/funding_rights.md for transparency to sponsors and institutions?
