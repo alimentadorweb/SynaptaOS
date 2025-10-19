@@ -16,7 +16,7 @@ def get_db_connection():
     try:
         conn = mysql.connector.connect(
              user="chatbot_user",       # Usuario de MariaDB/MySQL
-            password="WEbsupp0rt",  # Contraseña del usuario
+            password="G7tLb1K9j2M3xQ4p",  # Contraseña del usuario
             host="localhost",          # Host de MariaDB/MySQL
             database="chatbot_db",     # Nombre de la base de datos
             port=3306                 # Puerto de MariaDB/MySQL (por defecto es 3306)

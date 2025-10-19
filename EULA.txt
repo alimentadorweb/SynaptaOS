@@ -1,9 +1,72 @@
-⚖️ Funding and Representation Clause
+# ⚖️ Funding and Representation Rights
+*(Applicable to Synapta OS and all derivative projects)*
 
-The Synapta OS Project and all its associated components (including Parrot IA Interface) are intellectual property of the Synapta OS initiative.
-No individual, organization, or third party is authorized to solicit, receive, or represent funding, grants, or sponsorships on behalf of the project without explicit written consent from the Synapta OS team.
+---
 
-Any fundraising, partnership, or institutional collaboration related to Synapta OS must be conducted exclusively through the official Synapta OS channels.
-Unauthorized fundraising, representation, or derivative projects using the Synapta OS name, logo, or concept for financial or institutional gain is strictly prohibited.
+## 1. Ownership and Representation
+The **Synapta OS Project**, including all associated components, interfaces(PARROT), documentation, and derivative works (such as **Parrot IA Interface**, **Synapta Dashboard**, or any modified distributions based on Synapta OS), is the intellectual property of the **Synapta OS Initiative**.
 
-Would you like me to integrate this clause directly into the EULA.txt you requested earlier (so it becomes legally consistent), or prefer it as a separate section like docs/legal/funding_rights.md for transparency to sponsors and institutions?
+No individual, organization, or third party is authorized to **solicit, receive, negotiate, or represent funding, grants, sponsorships, or donations** on behalf of **Synapta OS** or any of its derivative projects without **explicit written authorization** from the official Synapta OS team.
+
+---
+
+## 2. Scope of Protection
+This clause extends to:
+- Any **derivative system or distribution** built upon Synapta OS, whether modified or rebranded.  
+- Any **interface or application** directly connected to Synapta OS infrastructure (e.g., Parrot IA Interface).  
+- Any **research, foundation, or institutional initiative** using Synapta OS as a base for presentation or fundraising.  
+- Any **use of Synapta OS’s identity**, including its **name, logo, concept, or visual identity**, for representation or sponsorship purposes.
+
+---
+
+## 3. Authorized Channels
+All official fundraising, sponsorships, or institutional collaborations related to Synapta OS must be managed **exclusively through official Synapta OS channels**:
+- Official website: [https://github.com/alimentadorweb/SynaptaOS](https://github.com/alimentadorweb/SynaptaOS)  
+- EMAIL: alimentadorweb@outlook.com
+- Authorized representatives designated in writing by the Synapta OS Initiative.  
+- Verified institutional partnerships listed in the project’s public documentation.
+
+Any other fundraising or representation is considered **unauthorized** and may constitute **misrepresentation or fraud** under applicable intellectual property and international collaboration laws.
+
+---
+
+## 4. Derivative Projects and Forks
+Derivative works, forks, or reimplementations of Synapta OS are permitted under the **MPL-2.0 license** provided that:
+- They **retain open-source availability** as required by the license.  
+- They **do not use the Synapta OS name, logo, or branding** without authorization.  
+- They **do not seek or accept funding or institutional recognition** under the Synapta OS identity.  
+- They include a **clear statement** that they are **independent projects**, not endorsed or represented by the Synapta OS Initiative.
+
+Failure to comply with these terms constitutes a violation of both **MPL-2.0 licensing conditions** and this **Funding and Representation Agreement**.
+
+---
+
+## 5. Enforcement and Ethics
+The Synapta OS Initiative reserves the right to:
+- Issue **legal or public notices** against unauthorized funding or misrepresentation.  
+- Deny institutional collaboration to organizations that engage in deceptive or non-transparent fundraising related to Synapta OS.  
+- Protect the integrity of the Synapta OS mission: ensuring that all resources, donations, or grants serve the purpose of **educational impact, open access, and community benefit**.
+
+---
+
+## 6. Transparency and Accountability
+All funding and sponsorship activities under Synapta OS are subject to:
+- **Public disclosure** of funding sources and project allocation.  
+- **Annual reporting** of institutional partners and financial contributors.  
+- **Independent auditing** if required by international education or technology grant frameworks.
+
+---
+
+## 7. Jurisdiction
+This clause and all related matters are governed by international open-source collaboration law and the principles of fair use and transparency in global educational projects.  
+Disputes or claims shall be resolved under the jurisdiction designated by the **Synapta OS Initiative**, currently based in **El Salvador**, with the option to expand under international agreements.
+
+---
+
+**In summary:**  
+No person or organization may request, manage, or represent funding for Synapta OS or its derivatives outside of official Synapta OS authorization.  
+All legitimate funding and institutional support must pass through the **Synapta OS Initiative**, ensuring transparency, ethics, and alignment with the educational mission.
+
+---
+
+_Last updated: October 2025_
