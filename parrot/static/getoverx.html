@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with PARROT IA</title>
+    <link rel="stylesheet" href="static/default.min.css">
+    <link rel="stylesheet" href="static/style.css">
+    <script src="static/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+<body>
+    <!-- Modal para el nombre de usuario -->
+    <div id="userModal">
+        <div style="background-color:white;text-align:center;"> 
+            <a href="https://getover.com" target="_blank">
+                <img src="https://getoverx.com/view/frontend/asset/images/logo_getoverx.png" />
+            </a>
+        </div>
+        <h2>How do you want me to be called?</h2>
+        <input type="text" id="usernameInput" placeholder="Nombre de usuario">
+        <button id="submitUsername">Enter</button>
+    </div>
+
+    <!-- Contenido principal del chat -->
+    <div id="chatContainer" style="display: none;">
+        <div class="header">
+            <div class="right" style="width: 350px;">
+                <div class="parrot">
+                    <div class="body"></div>
+                    <div class="wing"></div>
+                    <div class="eye"></div>
+                    <div class="mouth"></div>
+                    <div class="greeting"><p style="color: #004b97;">Welcome!</p></div>
+                </div>
+            </div>
+            <div class="right" style="width: 500px;">
+                <h1>PARROT CHATBOT</h1>
+                <p>Interact with our AI in a simple way.</p>
+                <p>Powered by: <a href="https://x.com/alimentadorweb" target="_blank">David Arriaga</a></p>
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="responseBox"></div>
+            <form id="chatForm">
+                <label for="modelSelect">Select an AI Model</label>
+                <select name="model" id="modelSelect">
+                    <option value="qwen2.5-coder:3b">| PARROT ONE |</option>
+                </select>
+                <div>
+                    <p>Users waiting: <span id="waiting-count">5</span></p>
+                </div>
+                <textarea id="prompt" placeholder="Escribe tu pregunta aquí..."></textarea>
+                <!-- Barra de carga (batería) -->
+                <div id="loader" class="loader-battery"></div>
+                <button type="submit" id="submitButton">Send</button>
+                <button type="button" id="stopButton" onclick="stopResponse()" disabled>Stop</button>
+                <p> [ /Clear ] Chatbot History Command</p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Mostrar el modal al cargar la página
+        document.addEventListener("DOMContentLoaded", () => {
+            const modal = document.getElementById("userModal");
+            modal.style.display = "block";
+        });
+
+        // Manejar el envío del nombre de usuario
+        document.getElementById("submitUsername").addEventListener("click", async () => {
+            const username = document.getElementById("usernameInput").value.trim();
+            if (!username) {
+                alert("Please enter your username.");
+                return;
+            }
+
+            try {
+                const response = await fetch("/create_user", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username })
+                });
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    const userId = data.user_id;
+                    localStorage.setItem("userId", userId); // Guardar el ID en localStorage
+                    document.getElementById("userModal").style.display = "none";
+                    document.getElementById("chatContainer").style.display = "block";
+                } else {
+                    alert(data.message || "Error creating user. Verify that the name is unique.");
+                }
+            } catch (error) {
+                alert("Connection error. Please try again.");
+            }
+        });
+
+        // Lógica del chat
+        let controller = null;
+        let isSubmitting = false;
+
+        document.getElementById('chatForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            if (isSubmitting) return;
+            isSubmitting = true;
+
+            const model = document.getElementById('modelSelect').value;
+            const prompt = document.getElementById('prompt').value.trim();
+            const userId = localStorage.getItem("userId");
+
+            if (!userId) {
+                alert("Please enter a username first.");
+                isSubmitting = false;
+                return;
+            }
+
+            if (prompt.toLowerCase() === "/clear") {
+                await clearChatHistory(userId);
+                document.getElementById('prompt').value = '';
+                isSubmitting = false;
+                return;
+            }
+
+            if (!prompt) {
+                alert("Please write a question before sending.");
+                isSubmitting = false;
+                return;
+            }
+
+            const responseBox = document.getElementById("responseBox");
+
+            const questionElement = document.createElement("div");
+            questionElement.classList.add("question");
+            questionElement.innerText = "Q: " + prompt;
+            responseBox.appendChild(questionElement);
+
+            const answerElement = document.createElement("div");
+            answerElement.classList.add("answer");
+            responseBox.appendChild(answerElement);
+
+            controller = new AbortController();
+            const signal = controller.signal;
+            document.getElementById("stopButton").disabled = false;
+            document.getElementById("submitButton").disabled = true; // Deshabilitar el botón de enviar
+            document.getElementById("loader").style.display = "block"; // Mostrar barra de carga
+
+            const url = `/chat?prompt=${encodeURIComponent(prompt)}&model=${encodeURIComponent(model)}&user_id=${userId}`;
+
+            try {
+        const response = await fetch(url, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            signal: signal
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let responseText = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            responseText += decoder.decode(value, { stream: true });
+
+            // Insertar el código en el DOM
+            const codeElement = document.createElement("code");
+            codeElement.classList.add("bash"); // Especifica el lenguaje
+            codeElement.textContent = escapeHTML(responseText);
+            answerElement.innerHTML = "A: <pre></pre>";
+            answerElement.querySelector("pre").appendChild(codeElement);
+
+            // Resaltar el código recién insertado
+            hljs.highlightElement(codeElement);
+        }
+    } catch (error) {
+        if (error.name !== "AbortError") {
+            answerElement.innerHTML = "<span style='color: red;'>Error: " + error.message + "</span>";
+        }
+    } finally {
+        controller = null;
+        document.getElementById("stopButton").disabled = true;
+        document.getElementById("submitButton").disabled = false;
+        document.getElementById("loader").style.display = "none";
+        isSubmitting = false;
+        document.getElementById('prompt').value = '';
+    }
+});
+
+        function stopResponse() {
+            if (controller) {
+                controller.abort();
+                controller = null;
+                document.getElementById("stopButton").disabled = true;
+                document.getElementById("submitButton").disabled = false; // Habilitar el botón de enviar
+                document.getElementById("loader").style.display = "none"; // Ocultar barra de carga
+                isSubmitting = false;
+            }
+        }
+
+        async function clearChatHistory(userId) {
+            try {
+                const response = await fetch(`/clear_chat?user_id=${userId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    document.getElementById('responseBox').innerHTML = '';
+                    const confirmation = document.createElement('div');
+                    confirmation.classList.add('answer');
+                    confirmation.innerHTML = "A: Deleted conversation history ✅";
+                    document.getElementById('responseBox').appendChild(confirmation);
+                }
+            } catch (error) {
+                console.error('Error borrando historial:', error);
+            }
+        }
+
+        function escapeHTML(html) {
+            return html.replace(/&/g, "&amp;")
+                       .replace(/</g, "&lt;")
+                       .replace(/>/g, "&gt;");
+        }
+
+        document.getElementById('prompt').addEventListener('keypress', function(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                document.getElementById('chatForm').requestSubmit();
+            }
+        });
+
+        async function updateWaitingUsers() {
+            try {
+                const response = await fetch("/waiting_users");
+                const data = await response.json();
+                document.getElementById("waiting-count").innerText = data.waiting_users;
+            } catch (error) {
+                console.error("Error actualizando usuarios en espera:", error);
+            }
+        }
+
+        // Actualizar cada 3 segundos
+        setInterval(updateWaitingUsers, 1000);
+    </script>
+</body>
+</html>

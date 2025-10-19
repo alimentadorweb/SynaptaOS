@@ -1,0 +1,636 @@
+:root {
+    --primary-color: #0066ff;
+    --dark-bg: #1a1a1a;
+    --light-bg: #2d2d2d;
+    --text-color: #e0e0e0;
+    --accent-color: #00cc88;
+    --border-color: #3a3a3a;
+}
+
+/* Estructura principal fija */
+body {
+    background-color: #1a1a1a;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    font-weight: 700;
+    color: var(--accent-color);
+    font-size: 1.5rem;
+}
+
+/* Contenedor del chat con scroll */
+.chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    padding-bottom: 120px; /* Espacio para el área de input */
+}
+
+.message {
+    margin-bottom: 1.5rem;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.user-message {
+    background-color: var(--light-bg);
+    align-self: flex-end;
+    max-width: 85%;
+    margin-left: auto;
+}
+
+.ai-message {
+    background-color: rgba(0, 102, 255, 0.1);
+    border-left: 3px solid var(--primary-color);
+    max-width: 85%;
+}
+
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    animation: typingAnimation 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingAnimation {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+}
+
+
+/* Área de input fija */
+.input-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #2c2b2b;
+    padding: 15px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+
+.input-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+}
+
+/* Ajustes para el textarea */
+#messageInput {
+    flex: 1;
+    min-height: 50px;
+    max-height: 150px;
+    resize: none;
+}
+
+/* Asegurar que los mensajes nuevos sean visibles */
+.message:last-child {
+    scroll-margin-bottom: 200px;
+}
+
+textarea {
+    flex: 1;
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    resize: none;
+    min-height: 50px;
+    max-height: 150px;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #0052cc;
+}
+
+button:disabled {
+    background-color: var(--border-color);
+    cursor: not-allowed;
+}
+
+.model-selector {
+    background-color: var(--light-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Estilos mejorados para bloques de código */
+pre {
+    background-color: #1e1e1e;
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* Bloque de código completo */
+pre.complete-code-block {
+    border-left: 3px solid var(--accent-color);
+    opacity: 1;
+}
+
+/* Bloque de código parcial (aún cargando) */
+pre.partial-code-block {
+    border-left: 3px solid #ffcc00;
+    opacity: 0.9;
+}
+
+pre.partial-code-block::after {
+    content: '...';
+    color: #aaa;
+    position: absolute;
+    bottom: 5px;
+    right: 10px;
+}
+
+code {
+    font-family: 'Fira Code', 'Courier New', monospace;
+    white-space: pre;
+    display: block;
+    min-height: 1em;
+}
+
+.copy-btn {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--text-color);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s;
+    z-index: 10;
+}
+
+.copy-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+pre:hover .copy-btn {
+    opacity: 1;
+}
+
+#userModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--dark-bg);
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+}
+
+.markdown-content {
+    line-height: 1.7;
+}
+
+.markdown-content p {
+    margin: 0.8rem 0;
+}
+
+.markdown-content ul, .markdown-content ol {
+    margin: 0.8rem 0;
+    padding-left: 1.5rem;
+}
+
+.markdown-content li {
+    margin: 0.3rem 0;
+}
+
+/* Estilo para el contenedor del selector */
+.model-selector {
+    position: relative;
+    min-width: 180px;
+    margin-left: 20px;
+    align-self: center;
+}
+
+/* Estilo base del select */
+#modelSelect {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 100%;
+    padding: 10px 35px 10px 15px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #f3f6f8;
+    background-color: #2e3bf1;
+    border: 2px solid #dfe6e9;
+    border-radius: 8px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Flecha personalizada */
+.model-selector::after {
+    content: "▼";
+    font-size: 12px;
+    color: #7f8c8d;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* Efectos hover y focus */
+#modelSelect:hover {
+    border-color: #b2bec3;
+    background-color: #ffffff;
+}
+
+#modelSelect:focus {
+    border-color: #004b97;
+    box-shadow: 0 0 0 3px rgba(0, 75, 151, 0.2);
+}
+
+/* Estilo para las opciones */
+#modelSelect option {
+    padding: 10px;
+    background: #ffffff;
+    color: #2c3e50;
+}
+
+#modelSelect option:hover {
+    background-color: #004b97 !important;
+    color: white;
+}
+
+/* Estilo para cuando está abierto (solo algunos navegadores) */
+#modelSelect:active, #modelSelect:focus {
+    color: #004b97;
+}
+
+/* Estilo para móviles */
+@media (max-width: 768px) {
+    .model-selector {
+        min-width: 150px;
+        margin-left: 10px;
+    }
+    
+    #modelSelect {
+        padding: 8px 30px 8px 12px;
+        font-size: 13px;
+    }
+}
+
+/* Estilos del loro animado */
+.parrot {
+    width: 161px;
+    height: 117px;
+    margin: 2em auto 0 auto;
+    position: relative;
+}
+
+.parrot .body {
+    width: 56px;
+    height: 117px;
+    background: #ee004c;
+    border-top-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    position: absolute;
+    left: 48px;
+    z-index: 10;
+}
+
+.parrot .wing {
+    width: 77px;
+    height: 58px;
+    background: rgba(19, 190, 0, 0.98);
+    border-top-right-radius: 30px;
+    border-bottom-left-radius: 30px;
+    position: absolute;
+    left: 0;
+    top: 40px;
+    z-index: 30;
+}
+
+.parrot .wing:after {
+    content: "";
+    width: 22px;
+    height: 19px;
+    background: #9c0179;
+    border-bottom-left-radius: 12px;
+    position: absolute;
+    left: 27px;
+    bottom: -19px;
+    z-index: -1;
+}
+
+.parrot .wing:before {
+    content: "";
+    width: 22px;
+    height: 3px;
+    background: rgba(6, 6, 6, 0.12);
+    position: absolute;
+    bottom: -3px;
+    left: 27px;
+}
+
+.parrot .eye {
+    width: 40px;
+    height: 40px;
+    background: #321557;
+    border: 8px solid #fff;
+    box-sizing: border-box;
+    border-radius: 50%;
+    position: absolute;
+    left: 70px;
+    top: -10px;
+    z-index: 70;
+}
+
+.parrot .eye:after {
+    content: "";
+    width: 13px;
+    height: 13px;
+    background: #fff;
+    border-radius: 50%;
+    left: 3px;
+    top: 2px;
+    position: absolute;
+    transition: all 0.4s ease;
+}
+
+.parrot .mouth {
+    width: 56px;
+    height: 56px;
+    position: absolute;
+    right: 1px;
+}
+
+.parrot .mouth:after {
+    content: "";
+    width: 75px;
+    height: 36px;
+    background: #fcce00;
+    border-top-right-radius: 30px;
+    transform-origin: left top;
+    position: absolute;
+    right: 0;
+    transition: all 0.4s ease;
+}
+
+.parrot .mouth:before {
+    content: "";
+    width: 29px;
+    height: 19px;
+    background: #0073ca;
+    border-bottom-right-radius: 30px;
+    box-sizing: border-box;
+    border-top: 3px solid #004b97;
+    position: absolute;
+    left: 0px;
+    top: 36px;
+}
+
+/* Hover del loro */
+.parrot:hover {
+    cursor: pointer;
+}
+
+.parrot:hover .mouth:after {
+    transform: rotate(-15deg);
+}
+
+.parrot:hover .eye:after {
+    width: 10px;
+    height: 10px;
+    left: 6px;
+}
+
+.parrot:hover .greeting {
+    right: -184px;
+    opacity: 1;
+}
+
+/* Mensaje de saludo */
+.greeting {
+    position: absolute;
+    background: #fff;
+    padding: 2em 1em;
+    right: -150px;
+    opacity: 0;
+    border-radius: 20px;
+    font-family: sans-serif;
+    text-transform: uppercase;
+    transition: all 0.5s ease;
+}
+
+.greeting:before {
+    content: "";
+    width: 0;
+    height: 0;
+    position: absolute;
+    border-top: 15px solid transparent;
+    border-bottom: 15px solid transparent;
+    border-right: 15px solid #fff;
+    left: -12px;
+    top: 25px;
+}
+
+.hover {
+    position: absolute;
+    font-family: Sans-Serif;
+    left: 40px;
+    bottom: -40px;
+    opacity: 0.4;
+}
+
+ /* Estilos para el modal */
+ #userModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background: rgb(22, 42, 95);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+@keyframes typing {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+}
+.partial-code {
+    animation: typing 0.8s infinite alternate;
+}
+        /* Estilos adicionales para el modal y botones de copiar */
+        #userModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+
+        .modal-content button {
+            background: #004b97;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        pre {
+            position: relative;
+            background: #282c34;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        pre code {
+            color: #abb2bf;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .partial-code {
+    position: relative;
+    background: #282c34dd; /* Ligera transparencia */
+    border-left: 4px solid #FFA500;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.partial-code::after {
+    content: 'Generando...';
+    position: absolute;
+    bottom: 5px;
+    right: 10px;
+    color: #aaa;
+    font-size: 0.8em;
+}
+
+        .copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 3px 8px;
+            font-size: 12px;
+            background: #004b97;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background: #003366;
+        }
+
+        textarea {
+            min-height: 40px;
+            resize: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }

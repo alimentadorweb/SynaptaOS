@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PARROT AI | Chat Inteligente</title>
+    <link rel="stylesheet" href="static/atom-one-dark.min.css">
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+      
+    </style>
+</head>
+<body>
+    <!-- Modal para el nombre de usuario -->
+    <div id="userModal">
+        <div class="modal-content">
+            <h2>How do you want me to be called?</h2>
+            <input type="text" id="usernameInput" placeholder="Enter your name">
+            <button id="submitUsername">Enter Chat</button>
+        </div>
+    </div>
+
+    <div id="app">
+        <!-- Encabezado -->
+        <div class="header"><div class="right" style="width: 200px;">
+            <div class="parrot">
+                <div class="body"></div>
+                <div class="wing"></div>
+                <div class="eye"></div>
+                <div class="mouth"></div>
+                <div class="greeting"><p style="color: #004b97;">Welcome!</p></div>
+            </div>
+        </div>
+        <div><h3>PARROT CHAT BOT 🤖</h3>
+            <p>Interact with our AI in a simple way.<br/>
+            Powered by: <a href="https://x.com/alimentadorweb" target="_blank" style="color:#519fec;"> | David Arriaga |</a><br/>
+            <div style="text-align: center;">
+                <a href="https://getoverx.com" target="_blank" style="color:#519fec;">WWW.GETOVERX.COM</a>
+              </div>
+              
+        </div>
+        <div class="model-selector">
+            Select:<br/>
+            <select id="modelSelect">
+                <option value="qwen2.5-coder:3b">PARROT CODE</option>
+                <option value="qwen2.5:3b">PARROT ONE</option>
+                <option value="gemma3:4b">PARROT TWO</option>
+            </select>
+        </div>
+        </div>
+        
+        <!-- Contenedor del chat -->
+        <div class="chat-container" id="chatContainer">
+            <div class="message ai-message">
+                <div class="markdown-content">¡Hola! Soy PARROT AI, tu asistente de inteligencia artificial. ¿En qué puedo ayudarte hoy?</div>
+            </div>
+        </div>
+        
+        <!-- Área de input (ahora fija) -->
+        <div class="input-area">
+            <div class="input-container">
+                <textarea id="messageInput" placeholder="Type your message here..." rows="1"></textarea>
+                <button id="sendButton">Send</button>
+                <button id="stopButton" disabled>Stop</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/highlight.min.js"></script>
+    <script>
+        // Configuración inicial
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const stopButton = document.getElementById('stopButton');
+        const modelSelect = document.getElementById('modelSelect');
+        const userModal = document.getElementById('userModal');
+        const usernameInput = document.getElementById('usernameInput');
+        const submitUsername = document.getElementById('submitUsername');
+        
+        let controller = null;
+        let isProcessing = false;
+        let userId = localStorage.getItem('userId');
+        
+        // Inicialización cuando el DOM está listo
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar Highlight.js
+            hljs.highlightAll();
+            
+            // Mostrar modal si no hay usuario
+            if (!userId) {
+                userModal.style.display = 'flex';
+                document.getElementById('app').style.display = 'none';
+            } else {
+                document.getElementById('app').style.display = 'block';
+                userModal.style.display = 'none';
+            }
+        });
+        
+        // Autoajustar altura del textarea
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = `${Math.min(messageInput.scrollHeight, 150)}px`;
+        });
+        
+        // Enviar mensaje al presionar Enter (sin Shift)
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // Enviar mensaje al hacer clic en el botón
+        sendButton.addEventListener('click', sendMessage);
+        
+        // Detener generación
+        stopButton.addEventListener('click', stopGeneration);
+        
+        // Manejar registro de usuario
+        submitUsername.addEventListener('click', async () => {
+            const username = usernameInput.value.trim();
+            if (!username) {
+                alert('Please enter your name');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/create_user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    userId = data.user_id;
+                    localStorage.setItem('userId', userId);
+                    userModal.style.display = 'none';
+                    document.getElementById('app').style.display = 'block';
+                    addMessage('ai', 'Hello! How can I assist you today?');
+                } else {
+                    alert(data.message || 'Error creating user. Please try a different name.');
+                }
+            } catch (error) {
+                alert('Connection error. Please try again.');
+            }
+        });
+
+ // Función para procesar el texto con formato en tiempo real
+function processResponseText(text, isPartial = false) {
+    // Estado para bloques de código parciales
+    let inCodeBlock = false;
+    let currentLang = '';
+    let codeContent = '';
+    let result = '';
+    
+    // Dividir por líneas para procesamiento más granular
+    const lines = text.split('\n');
+    
+    for (let line of lines) {
+        // Detectar inicio de bloque de código
+        if (!inCodeBlock && line.startsWith('```')) {
+            inCodeBlock = true;
+            currentLang = line.substring(3).trim() || 'plaintext';
+            codeContent = '';
+            continue;
+        }
+        
+        // Detectar fin de bloque de código
+        if (inCodeBlock && line === '```') {
+            inCodeBlock = false;
+            result += `<pre><code class="language-${currentLang}">${escapeHTML(codeContent)}</code></pre>`;
+            continue;
+        }
+        
+        // Procesar contenido dentro de bloque de código
+        if (inCodeBlock) {
+            codeContent += line + '\n';
+            continue;
+        }
+        
+        // Procesar texto normal (markdown básico)
+        let processedLine = escapeHTML(line)
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+            .replace(/\*(.*?)\*/g, "<em>$1</em>")
+            .replace(/`([^`]+)`/g, "<code>$1</code>");
+        
+        // Manejar listas
+        if (processedLine.startsWith('- ')) {
+            processedLine = `<li>${processedLine.substring(2)}</li>`;
+        }
+        
+        result += processedLine + '<br>';
+    }
+    
+    // Si estamos en un bloque de código parcial, mostrarlo como código
+    if (inCodeBlock && isPartial) {
+        result += `<pre class="partial-code"><code class="language-${currentLang}">${escapeHTML(codeContent)}</code></pre>`;
+    }
+    
+    return result;
+}
+
+// Función para mantener el scroll al actualizar mensajes
+function updateAIMessage(id, content, isPartial = false) {
+    const messageElement = document.getElementById(id);
+    if (messageElement) {
+        const formattedContent = processResponseText(content, isPartial);
+        messageElement.innerHTML = formattedContent;
+        
+        // Resaltar sintaxis
+        document.querySelectorAll('pre code').forEach((block) => {
+            if (!block.dataset.highlighted) {
+                hljs.highlightElement(block);
+                block.dataset.highlighted = 'true';
+                const preElement = block.closest('pre');
+                if (preElement) {
+                    addCopyButton(preElement);
+                }
+            }
+        });
+        
+        // Scroll solo si está cerca del final
+        const isNearBottom = chatContainer.scrollHeight - chatContainer.clientHeight - chatContainer.scrollTop < 100;
+        if (isNearBottom) {
+            messageElement.scrollIntoView({
+                behavior: 'auto',
+                block: 'nearest'
+            });
+        }
+    }
+}
+
+// Ajustar altura del textarea al iniciar
+function initTextarea() {
+    messageInput.style.height = 'auto';
+    messageInput.style.height = `${Math.min(messageInput.scrollHeight, 150)}px`;
+}
+
+// Inicialización modificada
+document.addEventListener('DOMContentLoaded', () => {
+    hljs.highlightAll();
+    
+    if (!userId) {
+        userModal.style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
+    } else {
+        document.getElementById('app').style.display = 'flex'; // Cambiado a flex
+        userModal.style.display = 'none';
+        initTextarea();
+    }
+});
+
+// Función para enviar mensaje (modificada para manejar mejor el streaming)
+async function sendMessage() {
+    const message = messageInput.value.trim();
+    if (!message || isProcessing) return;
+    
+    // Comando especial /clear
+    if (message.toLowerCase() === '/clear') {
+        await clearChatHistory();
+        messageInput.value = '';
+        return;
+    }
+    
+    isProcessing = true;
+    messageInput.value = '';
+    messageInput.style.height = 'auto';
+    sendButton.disabled = true;
+    stopButton.disabled = false;
+    
+    // Mostrar mensaje del usuario
+    addMessage('user', message);
+    
+    // Mostrar indicador de escritura
+    const typingId = showTypingIndicator();
+    let aiMessageId = createAIMessageContainer();
+    
+    try {
+        controller = new AbortController();
+        const response = await fetch(`/chat?prompt=${encodeURIComponent(message)}&model=${modelSelect.value}&user_id=${userId}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal
+        });
+        
+        if (!response.ok) throw new Error('Server response error');
+        if (!response.body) throw new Error('No response body');
+        
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullContent = '';
+        let buffer = '';
+        
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value, { stream: true });
+            buffer += chunk;
+            
+            // Procesar por líneas para mejor manejo de bloques de código
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // La última línea puede estar incompleta
+            
+            for (const line of lines) {
+                fullContent += line + '\n';
+                // Actualizar mostrando contenido parcial (escapado)
+                updateAIMessage(aiMessageId, fullContent, true);
+            }
+        }
+        
+        // Procesar cualquier contenido restante en el buffer
+        if (buffer.length > 0) {
+            fullContent += buffer;
+        }
+        
+        // Actualizar con el contenido final (formateado)
+        updateAIMessage(aiMessageId, fullContent);
+        
+    } catch (error) {
+        if (error.name !== 'AbortError') {
+            updateAIMessage(aiMessageId, `<span style="color: #ff6b6b;">Error: ${error.message}</span>`);
+        }
+    } finally {
+        removeTypingIndicator(typingId);
+        controller = null;
+        isProcessing = false;
+        sendButton.disabled = false;
+        stopButton.disabled = true;
+    }
+}
+
+       function addCopyButton(preElement) {
+    if (!preElement || !preElement.querySelector('code')) {
+        console.error('Elemento pre o code no encontrado');
+        return;
+    }
+
+    if (preElement.querySelector('.copy-btn')) return;
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    copyBtn.textContent = 'Copiar';
+    
+    // Estilos mejorados
+    Object.assign(copyBtn.style, {
+        position: 'absolute',
+        top: '8px',
+        right: '8px',
+        padding: '5px 10px',
+        fontSize: '13px',
+        background: '#2c3e50',
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        zIndex: '100',
+        transition: 'all 0.2s',
+        fontFamily: 'inherit'
+    });
+
+    preElement.style.position = 'relative';
+
+    copyBtn.addEventListener('click', async () => {
+        const codeElement = preElement.querySelector('code');
+        const codeToCopy = codeElement.textContent;
+        
+        try {
+            // Método moderno (async/await)
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(codeToCopy);
+            } 
+            // Método alternativo para navegadores antiguos
+            else {
+                const textarea = document.createElement('textarea');
+                textarea.value = codeToCopy;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                const success = document.execCommand('copy');
+                document.body.removeChild(textarea);
+                
+                if (!success) throw new Error('Falló el método alternativo');
+            }
+            
+            // Feedback visual de éxito
+            copyBtn.textContent = '✓ Copiado!';
+            copyBtn.style.background = '#27ae60';
+            
+            setTimeout(() => {
+                copyBtn.textContent = 'Copiar';
+                copyBtn.style.background = '#2c3e50';
+            }, 2000);
+            
+        } catch (err) {
+            console.error('Error al copiar:', err);
+            
+            // Feedback visual de error mejorado
+            copyBtn.textContent = '✗ Error';
+            copyBtn.style.background = '#e74c3c';
+            
+            setTimeout(() => {
+                copyBtn.textContent = 'Intentar de nuevo';
+                copyBtn.style.background = '#2c3e50';
+            }, 2000);
+            
+            // Mostrar tooltip con el error (opcional)
+            copyBtn.title = `Error: ${err.message}`;
+        }
+    });
+
+    // Efecto hover
+    copyBtn.onmouseenter = () => {
+        if (!copyBtn.textContent.includes('✓') && !copyBtn.textContent.includes('✗')) {
+            copyBtn.style.background = '#34495e';
+        }
+    };
+    copyBtn.onmouseleave = () => {
+        if (!copyBtn.textContent.includes('✓') && !copyBtn.textContent.includes('✗')) {
+            copyBtn.style.background = '#2c3e50';
+        }
+    };
+
+    preElement.appendChild(copyBtn);
+}
+
+        // Función para actualizar el mensaje AI con formato inmediato
+        function updateAIMessage(id, content, isPartial = false) {
+            const messageElement = document.getElementById(id);
+            if (messageElement) {
+                // Procesar el contenido para formato inmediato
+                const formattedContent = processResponseText(content, isPartial);
+                messageElement.innerHTML = formattedContent;
+                
+                // Resaltar sintaxis para bloques de código
+                document.querySelectorAll('pre code').forEach((block) => {
+                    if (!block.dataset.highlighted) {
+                        hljs.highlightElement(block);
+                        block.dataset.highlighted = 'true';
+                        
+                        // Añadir botón de copiar
+                        const preElement = block.closest('pre');
+                        if (preElement) {
+                            addCopyButton(preElement);
+                        }
+                    }
+                });
+                
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+
+        // Función para enviar mensaje
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isProcessing) return;
+            
+            // Comando especial /clear
+            if (message.toLowerCase() === '/clear') {
+                await clearChatHistory();
+                messageInput.value = '';
+                return;
+            }
+            
+            isProcessing = true;
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            sendButton.disabled = true;
+            stopButton.disabled = false;
+            
+            // Mostrar mensaje del usuario
+            addMessage('user', message);
+            
+            // Mostrar indicador de escritura
+            const typingId = showTypingIndicator();
+            let aiMessageId = createAIMessageContainer();
+            
+            try {
+                controller = new AbortController();
+                const response = await fetch(`/chat?prompt=${encodeURIComponent(message)}&model=${modelSelect.value}&user_id=${userId}`, {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                    signal: controller.signal
+                });
+                
+                if (!response.ok) throw new Error('Server response error');
+                if (!response.body) throw new Error('No response body');
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullContent = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    fullContent += chunk;
+                    updateAIMessage(aiMessageId, fullContent, true);
+                }
+                
+                // Procesar cualquier contenido restante
+                updateAIMessage(aiMessageId, fullContent);
+                
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    updateAIMessage(aiMessageId, `<span style="color: #ff6b6b;">Error: ${error.message}</span>`);
+                }
+            } finally {
+                removeTypingIndicator(typingId);
+                controller = null;
+                isProcessing = false;
+                sendButton.disabled = false;
+                stopButton.disabled = true;
+            }
+        }
+
+// Función modificada para añadir mensaje con scroll automático
+function addMessage(role, content) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${role}-message`;
+    
+    if (role === 'ai') {
+        messageDiv.innerHTML = `<div class="markdown-content">${content}</div>`;
+    } else {
+        messageDiv.textContent = content;
+    }
+    
+    chatContainer.appendChild(messageDiv);
+    
+    // Scroll suave al nuevo mensaje
+    messageDiv.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+    });
+    
+    return messageDiv.id;
+}
+
+        // Función para mostrar indicador de escritura
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message ai-message';
+            typingDiv.id = 'typing-' + Date.now();
+            typingDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return typingDiv.id;
+        }
+
+        // Función para eliminar indicador de escritura
+        function removeTypingIndicator(id) {
+            const typingElement = document.getElementById(id);
+            if (typingElement) {
+                typingElement.remove();
+            }
+        }
+
+        // Función para crear contenedor de mensaje AI
+        function createAIMessageContainer() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            messageDiv.id = 'ai-message-' + Date.now();
+            messageDiv.innerHTML = '<div class="markdown-content"></div>';
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return messageDiv.id;
+        }
+
+        // Función para detener la generación
+        function stopGeneration() {
+            if (controller) {
+                controller.abort();
+                controller = null;
+                isProcessing = false;
+                sendButton.disabled = false;
+                stopButton.disabled = true;
+            }
+        }
+
+        // Función para limpiar el historial
+        async function clearChatHistory() {
+            try {
+                const response = await fetch(`/clear_chat?user_id=${userId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                if (result.status === "success") {
+                    chatContainer.innerHTML = '';
+                    addMessage('ai', 'Chat history cleared successfully ✅');
+                }
+            } catch (error) {
+                console.error('Error clearing chat:', error);
+                addMessage('ai', 'Error clearing chat history');
+            }
+        }
+
+        // Función para escapar HTML (seguridad)
+        function escapeHTML(str) {
+            return str.replace(/&/g, "&amp;")
+                     .replace(/</g, "&lt;")
+                     .replace(/>/g, "&gt;")
+                     .replace(/"/g, "&quot;")
+                     .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
