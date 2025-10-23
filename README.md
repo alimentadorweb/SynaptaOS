@@ -1,5 +1,6 @@
 ##🌐 Synapta OS
-
+##🌐 WEB: https://synaptaos.com
+##🌐 Email: info@synaptaos.com
 Synapta OS is an educational Linux distribution preconfigured with local Artificial Intelligence (AI) capabilities.
 It is designed for schools and remote areas where Internet connectivity is limited or unavailable, offering access to AI-based learning and digital tools offline.
 
