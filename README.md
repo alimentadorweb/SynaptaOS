@@ -28,7 +28,7 @@ To reduce the digital divide by delivering a complete, privacy-respectful AI env
 
 🧩 Editions
 Edition 	Description 	License
-Synapta OS Community 	Open version for schools, NGOs, and volunteers 	MPL-2.0
+Synapta OS Community 	Open version for schools, NGOs, and volunteers 	GPL v2 or later
 Synapta OS Server / Education Pack 	Preconfigured image with full AI setup, support, and training material 	Commercial EULA
 
 ⚙️ Technical Overview
