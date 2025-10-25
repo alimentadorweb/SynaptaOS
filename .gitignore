@@ -1,0 +1,3 @@
+kernel/linux-6.1.157/drivers/gpu/drm/nouveau/nvkm/subdev/i2c/aux.c
+kernel/linux-6.1.157/drivers/gpu/drm/nouveau/nvkm/subdev/i2c/aux.h
+kernel/linux-6.1.157/include/soc/arc/aux.h
