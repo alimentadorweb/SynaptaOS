@@ -1,0 +1,14 @@
+# Kernel Import Notice
+
+**Imported component:** Linux Kernel 6.1 LTS  
+**Source:** https://kernel.org/pub/linux/kernel/v6.x/linux-6.1.0.tar.xz  
+**License:** GNU General Public License v2 (GPL-2.0)  
+**Imported by:** Fundación Synapta  
+**Date:** October 2025
+
+This kernel source code is included in its **entire original form** for verification, transparency, and legal compliance.  
+No modifications have been applied at the time of import.
+
+Future versions of Synapta OS may include a reduced or optimized kernel subset
+for specific architectures (e.g., x86_64, ARM64), but the complete upstream source
+will always remain publicly accessible for auditing purposes.
