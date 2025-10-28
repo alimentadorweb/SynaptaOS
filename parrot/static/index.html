@@ -1,59 +1,125 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PARROT AI | Chat Inteligente</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parrot IA Interface</title>
+  
+  <!-- Bootstrap local o CDN -->
     <link rel="stylesheet" href="static/atom-one-dark.min.css">
     <link rel="stylesheet" href="static/style.css">
-    <style>
-      
-    </style>
+      <!-- Bootstrap local o CDN -->
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+ 
 </head>
 <body>
+    <!-- CONTENEDOR PRINCIPAL -->
+  <div class="container-fluid p-0 d-flex flex-column">
     <!-- Modal para el nombre de usuario -->
     <div id="userModal">
         <div class="modal-content">
-            <h2>How do you want me to be called?</h2>
+            🦜 PARROT <span style="color:#3b82f6;">Interface IA</span><br>
+            <p>How do you want me to be called?</p>
             <input type="text" id="usernameInput" placeholder="Enter your name">
             <button id="submitUsername">Enter Chat</button>
         </div>
     </div>
 
     <div id="app">
-        <!-- Encabezado -->
-        <div class="header"><div class="right" style="width: 200px;">
-            <div class="parrot">
-                <div class="body"></div>
-                <div class="wing"></div>
-                <div class="eye"></div>
-                <div class="mouth"></div>
-                <div class="greeting"><p style="color: #004b97;">Welcome!</p></div>
-            </div>
+
+    <!-- Encabezado moderno (Dark UI) -->
+
+  <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg shadow-sm px-4 py-2" 
+         style="background-color:#1e1e1e; border-bottom:2px solid #3b82f6;">
+      <div class="container-fluid align-items-center">
+
+        <!-- Logo y título -->
+         <div class="d-none d-md-flex">
+        <div class="d-none d-md-flex d-flex justify-content-start align-items-center" style="width:100px;"></div>
+        <div class="d-flex align-items-center gap-3"></div>
+        <div class="header"><div style="width: 100px;"> <div class="parrot"> 
+        <div class="body"></div> 
+        <div class="wing"></div> 
+        <div class="eye"></div> 
+        <div class="mouth"></div> 
+        <div class="greeting">
+        <p style="color: #004b97;">Welcome!</p>
+        </div> 
+        </div> 
+        <div class="greeting"> <p class="fw-bold text-primary mb-0">Welcome!</p> </div>
         </div>
-        <div><h3>PARROT CHAT BOT 🤖</h3>
-            <p>Interact with our AI in a simple way.<br/>
-            Powered by: <a href="https://x.com/alimentadorweb" target="_blank" style="color:#519fec;"> | David Arriaga |</a><br/>
-            <div style="text-align: center;">
-                
-              </div>
-              
         </div>
-        <div class="model-selector">
-            Select:<br/>
-            <select id="modelSelect">
-                <option value="qwen2.5-coder:3b">PARROT CODE</option>
-                <option value="qwen2.5:3b">PARROT ONE</option>
-                <option value="gemma3:4b">PARROT TWO</option>
+        </div>
+        <!-- Solo para moviles -->
+    <div class="d-block d-md-none text-center px-3 py-2">
+  <p class="text-light mb-2" style="font-size:0.9rem; line-height:1.4;">
+    <strong class="fs-6">
+      🦜 PARROT <span style="color:#3b82f6;">Interface IA</span><br>
+      <span style="font-size:0.5rem;">Gemma Edition</span>
+    </strong><br>
+    <span style="font-size:0.8rem; color:#bbb;">
+      Interact with our AI in a simple way.<br>
+      Powered by 
+      <a href="https://github.com/alimentadorweb/SynaptaOS" target="_blank" 
+         class="text-decoration-none fw-semibold" style="color:#519fec;">
+        SynaptaOS
+      </a>
+    </span>
+  </p>
+</div>
+
+        <!-- Botón hamburguesa -->
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarParrot" 
+                aria-controls="navbarParrot" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+        </button>
+
+        <!-- Contenido colapsable -->
+        <div class="collapse navbar-collapse justify-content-between" id="navbarParrot">
+
+          <!-- Información central -->
+          <div class="text-center mx-auto d-none d-md-block" style="line-height:1.3;">
+            <p class="text-light mb-1" style="font-size:0.85rem;">
+                <span class="fs-5 fw-semibold">
+            🦜 PARROT <span style="color:#3b82f6;">IA</span><span style="font-size: 0.5rem;">- Gemma Edition</span><br/>
+              Interact with our AI in a simple way.<br>
+              Powered by 
+              <a href="https://github.com/alimentadorweb/SynaptaOS" target="_blank" 
+                 class="text-decoration-none fw-semibold" style="color:#519fec;">
+                SynaptaOS
+              </a>
+            </p>
+            <p class="text-muted mb-0" style="font-size:0.8rem;">
+              <code>[ /clear ]</code><span style="color:#ac177a;">clear user memory</span>
+            </p>
+            <div id="userData" class="mt-1 small text-info"></div>
+          </div>
+
+          <!-- Selector de modelo y logout -->
+          <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+            <select id="modelSelect" class="form-select form-select-sm"
+                    style="min-width:180px; background-color:#111; color:#fff; border:1px solid #3b82f6;">
+              <option value="gemma3:1b">General Topic</option>
             </select>
+            <button id="close" onclick="logout()" 
+                    class="btn btn-danger btn-sm fw-semibold shadow-sm">Log Out</button>
+          </div>
+
         </div>
-        </div>
-        
+      </div>
+    </nav>
+
+
+        <main class="container my-3 flex-grow-1">
         <!-- Contenedor del chat -->
-        <div class="chat-container" id="chatContainer">
-            <div class="message ai-message">
-                <div class="markdown-content">Hello! I'm PARROT AI, your artificial intelligence assistant. How can I help you today?</div>
-            </div>
+        <div id="chatContainer" class="chat-box">            
+        <div class="message ai-message">
+        <p class="text-info">¡Hola! Soy <strong>Parrot IA</strong>, tu asistente web. ¿En qué puedo ayudarte hoy?</p>
+      </div>
+        </div>
+
         </div>
         
         <!-- Área de input (ahora fija) -->
@@ -65,6 +131,7 @@
             </div>
         </div>
     </div>
+    </main>
 
     <script src="static/highlight.min.js"></script>
     <script>
@@ -135,12 +202,21 @@
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    userId = data.user_id;
-                    localStorage.setItem('userId', userId);
-                    userModal.style.display = 'none';
-                    document.getElementById('app').style.display = 'block';
-                    addMessage('ai', 'Hello! How can I assist you today?');
-                } else {
+    userId = data.user_id;
+    localStorage.setItem('userId', userId);
+    localStorage.setItem('username', username);
+    userModal.style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    addMessage('ai', 'Hello! How can I assist you today?');
+
+    // Mostrar ID y nombre
+    const userDataDiv = document.getElementById('userData');
+    userDataDiv.innerHTML = `
+        <p><strong>ID:</strong> ${userId}</p>
+        <p><strong>Nombre:</strong> ${username}</p>
+    `;
+}
+ else {
                     alert(data.message || 'Error creating user. Please try a different name.');
                 }
             } catch (error) {
@@ -183,9 +259,18 @@ function processResponseText(text, isPartial = false) {
         
         // Procesar texto normal (markdown básico)
         let processedLine = escapeHTML(line)
+            .replace(/\$\$(.*?)\$\$/gs, '$1')             // Bloques $$...$$
+            .replace(/\$(.*?)\$/g, '$1')                  // Inline $...$
             .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
             .replace(/\*(.*?)\*/g, "<em>$1</em>")
-            .replace(/`([^`]+)`/g, "<code>$1</code>");
+            .replace(/`([^`]+)`/g, "<code>$1</code>")
+            .replace(/\\boxed\{(.*?)\}/g, '$1')      // Convierte \boxed{X} → X
+            .replace(/\\frac\{(.*?)\}\{(.*?)\}/g, '($1 / $2)') // Convierte \frac{a}{b} → (a / b)
+            .replace(/\\text\{(.*?)\}/g, '$1')       // Convierte \text{algo} → algo
+            .replace(/\\times/g, '×')                // Convierte \times → ×
+            .replace(/\\[a-zA-Z]+/g, '')             // Elimina comandos LaTeX desconocidos (\hline, \begin, etc.)
+            .replace(/\s+/g, ' ')
+            .trim();
         
         // Manejar listas
         if (processedLine.startsWith('- ')) {
@@ -615,6 +700,58 @@ function addMessage(role, content) {
                      .replace(/"/g, "&quot;")
                      .replace(/'/g, "&#039;");
         }
+        
+    function logout() {
+    // Elimina datos de sesión del navegador
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');  // si usas este también
+
+    // Opcional: elimina todo
+    // localStorage.clear();
+
+    // Mostrar nuevamente el modal de login o redirigir
+    const userModal = document.getElementById('userModal');
+    if (userModal) {
+        userModal.style.display = 'block';
+    }
+
+    // También puedes recargar la página si es necesario
+    // location.reload();
+}
+
+  
+document.addEventListener('DOMContentLoaded', () => {
+    hljs.highlightAll();
+
+    const storedUserId = localStorage.getItem('userId');
+    const storedUserName = localStorage.getItem('username');
+
+    if (!storedUserId || !storedUserName) {
+        userModal.style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
+    } else {
+        document.getElementById('app').style.display = 'flex';
+        userModal.style.display = 'none';
+        initTextarea();
+
+        // Mostrar ID y nombre de usuario
+        const userDataDiv = document.getElementById('userData');
+        userDataDiv.innerHTML = `
+            <p><strong>ID:</strong> ${storedUserId}
+            <strong>Usuario:</strong> ${storedUserName}</p>
+        `;
+
+        // Personalizar solo el nombre en el saludo
+        const usernamePlaceholder = document.getElementById('usernamePlaceholder');
+        if (usernamePlaceholder) {
+            usernamePlaceholder.textContent = storedUserName;
+        }
+    }
+});
+
+
+
     </script>
+    </div>
 </body>
 </html>

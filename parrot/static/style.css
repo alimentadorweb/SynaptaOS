@@ -9,16 +9,64 @@
 
 /* Estructura principal fija */
 body {
-    background-color: #1a1a1a;
-    color: #fff;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    margin: 0;
-    overflow: hidden;
-}
+      background-color: #121212;
+      color: #f5f5f5 !important;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+    }
 
+    main {
+      flex-grow: 1;
+      overflow-x: hidden;
+      padding: 1rem;
+    }
+
+    .chat-box {
+      background-color: #1e1e1e;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 1rem;
+      max-height: 70vh;
+      overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .input-area {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: #1e1e1e;
+      border-radius: 10px;
+      padding: 0.2rem;
+      margin-top: 1rem;
+    }
+
+    .input-area input {
+      flex-grow: 1;
+      background-color: #111;
+      border: 1px solid #3b82f6;
+      color: #fff;
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      outline: none;
+    }
+
+    .input-area button {
+      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      font-weight: 600;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #aaa;
+      padding: 1rem 0;
+      border-top: 1px solid #333;
+    }
 #app {
     display: flex;
     flex-direction: column;
@@ -173,9 +221,13 @@ button:disabled {
     color: var(--text-color);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 0.5rem;
+    padding: 0.2rem;
     margin-bottom: 0.5rem;
+
+    width: 100%;           /* Ocupa el ancho disponible del contenedor */
+    max-width: 200px;      /* Limita el ancho máximo */
 }
+
 
 /* Estilos mejorados para bloques de código */
 pre {
@@ -239,27 +291,6 @@ pre:hover .copy-btn {
     opacity: 1;
 }
 
-#userModal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background-color: var(--dark-bg);
-    padding: 2rem;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    text-align: center;
-}
 
 .markdown-content {
     line-height: 1.7;
@@ -344,6 +375,33 @@ pre:hover .copy-btn {
 #modelSelect:active, #modelSelect:focus {
     color: #004b97;
 }
+
+#close {
+  background-color: #e74c3c;       /* Rojo intenso */
+  color: #fff;                     /* Texto blanco */
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;           /* Ocupa el ancho disponible del contenedor */
+  max-width: 200px;      /* Limita el ancho máximo */
+}
+
+#close:hover {
+  background-color: #c0392b;       /* Rojo más oscuro al pasar el mouse */
+  transform: scale(1.05);          /* Efecto de agrandamiento */
+}
+
+#close:active {
+  background-color: #a93226;       /* Rojo más oscuro al hacer clic */
+  transform: scale(0.98);          /* Efecto de presión */
+}
+
+
 
 /* Estilo para móviles */
 @media (max-width: 768px) {
@@ -521,18 +579,6 @@ pre:hover .copy-btn {
     opacity: 0.4;
 }
 
- /* Estilos para el modal */
- #userModal {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 20px;
-    background: rgb(22, 42, 95);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
 
 @keyframes typing {
     from { opacity: 0.5; }
@@ -541,45 +587,9 @@ pre:hover .copy-btn {
 .partial-code {
     animation: typing 0.8s infinite alternate;
 }
-        /* Estilos adicionales para el modal y botones de copiar */
-        #userModal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
+       /* Estilos adicionales para el modal y botones de copiar */
 
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 300px;
-            text-align: center;
-        }
-
-        .modal-content input {
-            width: 100%;
-            padding: 8px;
-            margin: 10px 0;
-            box-sizing: border-box;
-        }
-
-        .modal-content button {
-            background: #004b97;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        pre {
+pre {
             position: relative;
             background: #282c34;
             padding: 15px;
@@ -588,7 +598,7 @@ pre:hover .copy-btn {
             margin: 10px 0;
         }
 
-        pre code {
+pre code {
             color: #abb2bf;
             font-family: 'Courier New', Courier, monospace;
         }
@@ -634,3 +644,238 @@ pre:hover .copy-btn {
             border-radius: 4px;
             border: 1px solid #ccc;
         }
+
+        /* === CORRECCIÓN DEL FONDO BLANCO === */
+html, body {
+  height: 100%;
+  background-color: #121212; /* asegúrate que todo el fondo sea oscuro */
+}
+
+#app {
+  min-height: 100vh;  /* ocupa toda la altura visible */
+  background-color: #121212; /* mismo color que el body */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* === MEJORA DE NAV EN MÓVIL === */
+.navbar {
+  background-color: #1e1e1e !important;
+  border-bottom: 2px solid #3b82f6;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
+.navbar-brand img {
+  width: 40px;
+  height: 40px;
+}
+
+/* Ajustes solo para pantallas pequeñas */
+@media (max-width: 768px) {
+  .navbar-brand {
+    font-size: 1.1rem !important;
+  }
+
+  .navbar {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .navbar .text-light,
+  .navbar a,
+  .navbar p {
+    font-size: 0.9rem !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Centrar contenido en móvil */
+  .navbar .container-fluid {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+/* === CORRECCIÓN DEL INPUT EN MOVIL Y PC === */
+
+/* Contenedor principal del input */
+.input-area {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #2c2b2b;
+  padding: 12px;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* Contenedor interno que controla el ancho */
+.input-container {
+  width: 100%;
+  max-width: 900px;  /* mismo ancho que el chat */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+}
+
+/* Textarea: ocupa más espacio, sin romper diseño */
+textarea#messageInput {
+  flex: 1;
+  width: 100%;
+  min-height: 48px;
+  max-height: 180px;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  background-color: #111;
+  color: #fff;
+  padding: 10px 12px;
+  resize: none;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Botones */
+#sendButton,
+#stopButton {
+  flex-shrink: 0;
+  height: 48px;
+  padding: 0 20px;
+}
+
+/* === VERSIÓN MÓVIL === */
+@media (max-width: 768px) {
+  .input-area {
+    padding: 8px;
+  }
+
+  .input-container {
+    max-width: 100%;
+    gap: 6px;
+  }
+
+  textarea#messageInput {
+    font-size: 0.95rem;
+    min-height: 44px;
+  }
+
+  #sendButton, #stopButton {
+    padding: 0 16px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Evitar scroll horizontal global */
+html, body {
+  overflow-x: hidden !important;
+}
+
+
+/* === MODAL PARROT IA UNIFICADO Y OSCURO === */
+#userModal {
+  display: flex; /* se muestra o se oculta por JS */
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 5000;
+  animation: fadeIn 0.4s ease;
+}
+
+/* Caja principal */
+.modal-content {
+  background: #1a1a1a;
+  color: #f0f0f0;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  padding: 2rem 2.5rem;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+  transform: translateY(-15px);
+  animation: slideIn 0.4s ease forwards;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Título */
+.modal-content h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 1.5rem;
+}
+
+/* Input */
+.modal-content input[type="text"] {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #3b82f6;
+  border-radius: 6px;
+  background-color: #111;
+  color: #f0f0f0;
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.modal-content input[type="text"]:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+}
+
+/* Botón */
+.modal-content button {
+  width: 100%;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background-color: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease;
+}
+.modal-content button:hover {
+  background-color: #2563eb;
+  transform: scale(1.03);
+}
+.modal-content button:active {
+  transform: scale(0.97);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .modal-content {
+    padding: 1.5rem;
+    max-width: 90%;
+  }
+  .modal-content h2 {
+    font-size: 1.2rem;
+  }
+}
+
+
+
