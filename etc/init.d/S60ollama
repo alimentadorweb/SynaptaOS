@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# Start/Stop Ollama
+#
+
+DAEMON=/usr/bin/ollama
+LOGFILE=/var/log/ollama.log
+PIDFILE=/var/run/ollama.pid
+
+# Make sure models path is set (handled by S01mount_data linking /root/.ollama)
+# But we can enforce it env var too
+export OLLAMA_MODELS="/root/.ollama/models"
+export OLLAMA_HOST="0.0.0.0:11434" # Listen on all interfaces if needed, or 127.0.0.1
+
+start() {
+    echo -n "Starting Ollama: "
+    start-stop-daemon -S -b -m -p "$PIDFILE" -x "$DAEMON" -- serve > "$LOGFILE" 2>&1
+    echo "OK"
+}
+
+stop() {
+    echo -n "Stopping Ollama: "
+    start-stop-daemon -K -p "$PIDFILE"
+    echo "OK"
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart|reload)
+    stop
+    sleep 1
+    start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+esac

@@ -1,0 +1,176 @@
+#!/bin/sh
+#
+# Initialize Synapta Database (First Boot Only) - Buildroot/BusyBox friendly
+#
+
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
+DATADIR="/var/lib/mysql"
+MARKER_FILE="$DATADIR/.synapta_initialized"
+RUNDIR="/run/mysqld"
+INIT_SOCKET="$RUNDIR/mysqld-init.sock"
+
+ENV_FILE="/etc/synapta/synapta.env"
+
+# Defaults (can be overridden by ENV_FILE)
+DB_NAME="chatbot_db"
+APP_USER="synapta_app"
+APP_PASS="synapta_password"
+
+load_env() {
+  if [ -f "$ENV_FILE" ]; then
+    set -a
+    . "$ENV_FILE"
+    set +a
+    # If you later add these to env:
+    [ -n "${SYNAPTA_DB_NAME:-}" ] && DB_NAME="$SYNAPTA_DB_NAME"
+    [ -n "${SYNAPTA_DB_APP_USER:-}" ] && APP_USER="$SYNAPTA_DB_APP_USER"
+    [ -n "${SYNAPTA_DB_APP_PASS:-}" ] && APP_PASS="$SYNAPTA_DB_APP_PASS"
+  fi
+}
+
+# Binary detection (names vary between distros/builds)
+pick_bin() {
+  for b in "$@"; do
+    command -v "$b" >/dev/null 2>&1 && { command -v "$b"; return 0; }
+  done
+  return 1
+}
+
+MYSQLD_SAFE="$(pick_bin mysqld_safe mariadbd-safe || true)"
+MYSQLD_BIN="$(pick_bin mariadbd mysqld || true)"
+MYSQL_INSTALL_DB="$(pick_bin mysql_install_db mariadb-install-db mariadb-install-db || true)"
+MYSQL_CLI="$(pick_bin mysql mariadb || true)"
+MYSQLADMIN="$(pick_bin mysqladmin mariadb-admin || true)"
+
+MYSQLD_USER="mysql"
+
+user_exists() {
+  id "$MYSQLD_USER" >/dev/null 2>&1
+}
+
+fail() { echo "ERROR: $*"; exit 1; }
+
+wait_temp_server() {
+  i=0
+  while [ $i -lt 30 ]; do
+    if [ -S "$INIT_SOCKET" ]; then
+      # Socket exists, now test query
+      echo "SELECT 1;" | "$MYSQL_CLI" -S "$INIT_SOCKET" -u root >/dev/null 2>&1 && return 0
+    fi
+    sleep 1
+    i=$((i+1))
+  done
+  return 1
+}
+
+init_db() {
+  load_env
+
+  [ -n "$MYSQL_INSTALL_DB" ] || fail "mysql_install_db/mariadb-install-db not found"
+  [ -n "$MYSQL_CLI" ] || fail "mysql/mariadb client not found"
+  [ -n "$MYSQLADMIN" ] || fail "mysqladmin/mariadb-admin not found"
+  [ -n "$MYSQLD_SAFE" ] || [ -n "$MYSQLD_BIN" ] || fail "MariaDB server binary not found"
+
+  echo "Initializing MariaDB for Synapta OS..."
+
+  mkdir -p "$DATADIR" "$RUNDIR"
+  # Best effort permissions
+  if user_exists; then
+    chown "$MYSQLD_USER:$MYSQLD_USER" "$DATADIR" "$RUNDIR" 2>/dev/null || true
+  fi
+
+  # 1) Install base DB files
+  if user_exists; then
+    "$MYSQL_INSTALL_DB" --user="$MYSQLD_USER" --datadir="$DATADIR" >/dev/null 2>&1 || true
+  else
+    "$MYSQL_INSTALL_DB" --datadir="$DATADIR" >/dev/null 2>&1 || true
+  fi
+
+  # 2) Start temp instance (local only)
+  echo "Starting temporary MariaDB instance for provisioning..."
+  rm -f "$INIT_SOCKET" 2>/dev/null || true
+
+  if [ -n "$MYSQLD_SAFE" ]; then
+    if user_exists; then
+      "$MYSQLD_SAFE" --datadir="$DATADIR" --socket="$INIT_SOCKET" --skip-networking --user="$MYSQLD_USER" --nowatch >/dev/null 2>&1 &
+    else
+      "$MYSQLD_SAFE" --datadir="$DATADIR" --socket="$INIT_SOCKET" --skip-networking --nowatch >/dev/null 2>&1 &
+    fi
+  else
+    # fallback to mariadbd/mysqld
+    if user_exists; then
+      "$MYSQLD_BIN" --datadir="$DATADIR" --socket="$INIT_SOCKET" --skip-networking --user="$MYSQLD_USER" --pid-file="$RUNDIR/mysqld-init.pid" >/dev/null 2>&1 &
+    else
+      "$MYSQLD_BIN" --datadir="$DATADIR" --socket="$INIT_SOCKET" --skip-networking --pid-file="$RUNDIR/mysqld-init.pid" >/dev/null 2>&1 &
+    fi
+  fi
+
+  TEMP_PID=$!
+
+  echo -n "Waiting for temp server... "
+  if wait_temp_server; then
+    echo "UP."
+  else
+    echo "FAILED."
+    kill "$TEMP_PID" 2>/dev/null || true
+    fail "Temp MariaDB did not become ready"
+  fi
+
+  # 3) Provision Schema & Users (MATCH parrot.py schema!)
+  echo "Provisioning schema..."
+
+  SQL_COMMANDS="
+  CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;
+  USE \`$DB_NAME\`;
+
+  CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      username VARCHAR(255) UNIQUE NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS chat_history (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT,
+      user_prompt TEXT,
+      ai_response TEXT,
+      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+
+  CREATE USER IF NOT EXISTS '$APP_USER'@'localhost' IDENTIFIED BY '$APP_PASS';
+  GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$APP_USER'@'localhost';
+  FLUSH PRIVILEGES;
+  "
+
+  echo "$SQL_COMMANDS" | "$MYSQL_CLI" -S "$INIT_SOCKET" -u root >/dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    echo "Database provisioned successfully."
+    touch "$MARKER_FILE"
+  else
+    echo "Database provisioning FAILED."
+  fi
+
+  # 4) Shutdown temp instance
+  "$MYSQLADMIN" -S "$INIT_SOCKET" -u root shutdown >/dev/null 2>&1 || true
+  wait "$TEMP_PID" 2>/dev/null || true
+
+  # 5) Start real service
+  /etc/init.d/S40mariadb start || true
+}
+
+start() {
+  if [ -f "$MARKER_FILE" ]; then
+    echo "Synapta DB already initialized. Skipping."
+    # Ensure mariadb is running
+    pgrep -f "mariadbd|mysqld" >/dev/null 2>&1 || /etc/init.d/S40mariadb start || true
+    exit 0
+  fi
+
+  init_db
+}
+
+case "$1" in
+  start) start ;;
+  *) exit 0 ;;
+esac

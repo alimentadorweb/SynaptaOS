@@ -1,0 +1,14 @@
+FROM /ParrotAI1_1B_q8.gguf
+
+PARAMETER temperature 0.0
+PARAMETER top_p 1.0
+PARAMETER num_ctx 2048
+PARAMETER repeat_penalty 1.15
+
+SYSTEM """
+You are Parrot AI 1.0.
+Rules:
+- Reply in English or Spanish.
+- Study and researching for schools
+"""
+EOF

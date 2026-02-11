@@ -1,0 +1,106 @@
+#!/bin/sh
+#
+# Start/Stop MariaDB (Buildroot/BusyBox friendly)
+#
+
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
+DATADIR="/var/lib/mysql"
+RUNDIR="/run/mysqld"
+PIDFILE="$RUNDIR/mysqld.pid"
+SOCKET="$RUNDIR/mysqld.sock"
+BIND="127.0.0.1"
+
+# Prefer mysqld_safe if present, else fall back to server binary
+DAEMON=""
+[ -x /usr/bin/mysqld_safe ] && DAEMON="/usr/bin/mysqld_safe"
+[ -x /usr/sbin/mysqld_safe ] && DAEMON="/usr/sbin/mysqld_safe"
+
+if [ -z "$DAEMON" ]; then
+  [ -x /usr/sbin/mariadbd ] && DAEMON="/usr/sbin/mariadbd"
+  [ -x /usr/sbin/mysqld ] && DAEMON="/usr/sbin/mysqld"
+  [ -x /usr/bin/mariadbd ] && DAEMON="/usr/bin/mariadbd"
+  [ -x /usr/bin/mysqld ] && DAEMON="/usr/bin/mysqld"
+fi
+
+MYSQLD_USER="mysql"
+
+is_initialized() {
+  [ -d "$DATADIR/mysql" ]
+}
+
+start() {
+  if [ -z "$DAEMON" ]; then
+    echo "MariaDB server binary not found."
+    exit 1
+  fi
+
+  if ! is_initialized; then
+    echo "MariaDB data directory not initialized. Skipping start (waiting for S50synapta-dbinit)."
+    exit 0
+  fi
+
+  echo "Starting MariaDB..."
+
+  mkdir -p "$RUNDIR" || true
+
+  # chown only if user exists
+  if id "$MYSQLD_USER" >/dev/null 2>&1; then
+    chown "$MYSQLD_USER:$MYSQLD_USER" "$RUNDIR" 2>/dev/null || true
+  else
+    echo "WARN: user '$MYSQLD_USER' not found. MariaDB may fail if it requires --user=mysql."
+  fi
+
+  # Launch
+  case "$DAEMON" in
+    *mysqld_safe*)
+      "$DAEMON" --datadir="$DATADIR" --user="$MYSQLD_USER" --pid-file="$PIDFILE" --socket="$SOCKET" --bind-address="$BIND" --nowatch >/dev/null 2>&1 &
+      ;;
+    *)
+      # mariadbd/mysqld often runs in foreground, so background it
+      "$DAEMON" --datadir="$DATADIR" --user="$MYSQLD_USER" --pid-file="$PIDFILE" --socket="$SOCKET" --bind-address="$BIND" >/dev/null 2>&1 &
+      ;;
+  esac
+
+  # Wait for socket (up to ~10s)
+  i=0
+  while [ $i -lt 10 ]; do
+    [ -S "$SOCKET" ] && echo "MariaDB OK" && return 0
+    sleep 1
+    i=$((i+1))
+  done
+
+  echo "WARN: MariaDB started but socket not detected yet."
+  return 0
+}
+
+stop() {
+  echo "Stopping MariaDB..."
+
+  if [ -f "$PIDFILE" ]; then
+    PID="$(cat "$PIDFILE" 2>/dev/null || true)"
+    if [ -n "$PID" ]; then
+      kill "$PID" 2>/dev/null || true
+
+      # wait for process to die
+      i=0
+      while [ $i -lt 10 ]; do
+        kill -0 "$PID" 2>/dev/null || { echo "MariaDB stopped"; rm -f "$PIDFILE" 2>/dev/null || true; return 0; }
+        sleep 1
+        i=$((i+1))
+      done
+
+      echo "WARN: MariaDB did not stop in time."
+      return 0
+    fi
+  fi
+
+  echo "MariaDB not running."
+}
+
+case "$1" in
+  start) start ;;
+  stop) stop ;;
+  restart|reload) stop; sleep 1; start ;;
+  *) echo "Usage: $0 {start|stop|restart}"; exit 1 ;;
+esac

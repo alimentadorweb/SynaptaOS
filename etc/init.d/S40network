@@ -1,0 +1,91 @@
+#!/bin/sh
+#
+# Configure eth0 (DHCP with static fallback) - Buildroot/BusyBox friendly
+#
+
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
+INTERFACE="eth0"
+STATIC_IP="192.168.50.10"
+PREFIX="24"              # 255.255.255.0
+TIMEOUT=10
+
+UDHCPC_SCRIPT="/usr/share/udhcpc/default.script"
+[ -x "$UDHCPC_SCRIPT" ] || UDHCPC_SCRIPT="/etc/udhcpc/default.script"
+[ -x "$UDHCPC_SCRIPT" ] || UDHCPC_SCRIPT=""
+
+get_ip() {
+  ip -4 -o addr show dev "$INTERFACE" scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -n1
+}
+
+wait_for_dhcp() {
+  echo "Starting DHCP on $INTERFACE..."
+
+  # Ensure loopback is up
+  ip link set dev lo up 2>/dev/null || true
+
+  # Start udhcpc in foreground (-f) so PID tracking is reliable
+  if [ -n "$UDHCPC_SCRIPT" ]; then
+    udhcpc -f -i "$INTERFACE" -n -t 5 -T 2 -q -s "$UDHCPC_SCRIPT" &
+  else
+    udhcpc -f -i "$INTERFACE" -n -t 5 -T 2 -q &
+  fi
+  UDHCPC_PID=$!
+
+  i=0
+  while [ $i -lt $TIMEOUT ]; do
+    IP="$(get_ip)"
+    if [ -n "$IP" ]; then
+      echo "DHCP Success: $IP"
+      return 0
+    fi
+    sleep 1
+    i=$((i+1))
+  done
+
+  # Stop udhcpc cleanly
+  kill "$UDHCPC_PID" 2>/dev/null || true
+  return 1
+}
+
+start() {
+  echo "Configuring network ($INTERFACE)..."
+
+  # Bring interface up
+  ip link set dev "$INTERFACE" up
+
+  # Try DHCP
+  if wait_for_dhcp; then
+    echo "Network OK (DHCP)"
+    return 0
+  fi
+
+  echo "DHCP failed or timed out. Falling back to static: $STATIC_IP/$PREFIX"
+
+  # Fallback static
+  ip addr flush dev "$INTERFACE"
+  ip addr add "$STATIC_IP/$PREFIX" dev "$INTERFACE"
+  ip link set dev "$INTERFACE" up
+
+  # Optional: add a default route if you want predictable routing in static mode
+  # ip route replace default via 192.168.50.1 dev "$INTERFACE" 2>/dev/null || true
+
+  echo "Network OK (Static)"
+}
+
+stop() {
+  echo "Stopping network ($INTERFACE)..."
+  killall udhcpc 2>/dev/null || true
+  ip addr flush dev "$INTERFACE" 2>/dev/null || true
+  ip link set dev "$INTERFACE" down 2>/dev/null || true
+  echo "OK"
+}
+
+case "$1" in
+  start) start ;;
+  stop) stop ;;
+  restart|reload) stop; sleep 1; start ;;
+  *) echo "Usage: $0 {start|stop|restart}"; exit 1 ;;
+esac
+
+exit $?

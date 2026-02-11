@@ -1,0 +1,63 @@
+#!/bin/sh
+#
+# Simple Firewall for Synapta OS (Hardening)
+# Allows Loopback, Related/Established, and TCP 8000 only.
+#
+
+IPT=/usr/sbin/iptables
+
+start() {
+    echo -n "Starting Firewall: "
+    
+    # 1. Flush existing rules
+    $IPT -F
+    $IPT -X
+    
+    # 2. Set Default Policies (DROP Input/Forward, ACCEPT Output)
+    $IPT -P INPUT DROP
+    $IPT -P FORWARD DROP
+    $IPT -P OUTPUT ACCEPT
+    
+    # 3. Allow Loopback (Localhost communication is critical for DB/Ollama)
+    $IPT -A INPUT -i lo -j ACCEPT
+    
+    # 4. Allow Established Connections (Responses to our requests)
+    $IPT -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+    
+    # 5. Allow FastAPI Port 8000 (TCP)
+    $IPT -A INPUT -p tcp --dport 8000 -j ACCEPT
+    
+    # 6. Allow ICMP (Ping) - Optional but good for debugging
+    $IPT -A INPUT -p icmp -j ACCEPT
+
+    # 7. Allow SSH if needed (Uncomment for debugging)
+    # $IPT -A INPUT -p tcp --dport 22 -j ACCEPT
+
+    echo "OK"
+}
+
+stop() {
+    echo -n "Stopping Firewall (Allow All): "
+    $IPT -F
+    $IPT -X
+    $IPT -P INPUT ACCEPT
+    $IPT -P FORWARD ACCEPT
+    $IPT -P OUTPUT ACCEPT
+    echo "OK"
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart|reload)
+    stop
+    start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+esac

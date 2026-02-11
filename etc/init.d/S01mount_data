@@ -1,0 +1,65 @@
+#!/bin/sh
+#
+# Mount Data Partition & Prepare Persistence
+#
+
+MOUNT_POINT="/mnt/data"
+# Label of your data partition (set in genimage.cfg with -n DATA or similar, 
+# or use /dev/sdX3 calculation logic)
+PART_LABEL="DATA" 
+
+start() {
+    echo -n "Mounting Data Partition: "
+    
+    # Check if already mounted
+    if mountpoint -q "$MOUNT_POINT"; then
+        echo "already mounted."
+        exit 0
+    fi
+    
+    mkdir -p "$MOUNT_POINT"
+    
+    # Try mounting by Label
+    if mount -L "$PART_LABEL" "$MOUNT_POINT"; then
+        echo "OK (Label)"
+    else
+        # Fallback: Try /dev/sda4 (or whatever partition number your data is)
+        # This is fragile, Label or UUID is better
+        # For this script we assume the label DATA works (mkfs.ext4 -L DATA)
+        echo "FAIL (Could not find label $PART_LABEL)"
+        exit 1
+    fi
+    
+    # Prepare Persistent Directories
+    mkdir -p "$MOUNT_POINT/mysql"
+    mkdir -p "$MOUNT_POINT/ollama"
+    
+    # Link to System Paths
+    # Ensure standard paths point to our persistent storage
+    
+    # MySQL
+    if [ ! -L "/var/lib/mysql" ]; then
+        rm -rf "/var/lib/mysql"
+        ln -sf "$MOUNT_POINT/mysql" "/var/lib/mysql"
+    fi
+    
+    # Ollama Models
+    # Ollama uses ~/.ollama by default
+    mkdir -p /root
+    if [ ! -L "/root/.ollama" ]; then
+        rm -rf "/root/.ollama"
+        ln -sf "$MOUNT_POINT/ollama" "/root/.ollama"
+    fi
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    umount "$MOUNT_POINT"
+    ;;
+  *)
+    echo "Usage: $0 {start|stop}"
+    exit 1
+esac
